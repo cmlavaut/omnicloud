@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    tools {
+        nodejs "nodejs"
+    }
+    environment {
+        HOST = "10.10.1.218"
+        DB_HOST = ""
+        DB_NAME = "movie_db"
+    }
+
+    stages {
+        stage ("Clone Repository") { 
+            steps {
+                git branch: "master", url: "https://github.com/cmlavaut/omnicloud.git", credentialsId: "github-kmi"
+            }
+        }
+
+        stage ("Install Dependencies") {
+            steps {
+                dir ("omnicloud/app-backend") { 
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage ("Deploy to EC2") {
+            steps {
+                sshagent (["ec2-ssh-pem"]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'rds-db-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASS'
+                    )]) {
+                        sh """
+                        scp -o StrictHostKeyChecking=no -r omnicloud/app-backend ec2-user@${HOST}:/home/ec2-user/ 
+                        ssh ec2-user@${HOST} '
+                          cd /home/ec2-user/app-backend &&
+                          export DB_HOST=${DB_HOST}
+                          export DB_USER=${DB_USER}
+                          export DB_PASS=${DB_PASS}
+                          export DB_NAME=${DB_NAME}
+                          npm install --production &&
+                          pm2 delete app || true &&
+                          pm2 start server.js --name app &&
+                          pm2 save
+                    '                 
+                    """
+                }
+            }
+        }
+    }
+    
+}

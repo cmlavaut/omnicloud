@@ -1,0 +1,32 @@
+- name: Install Java version
+  dnf: 
+    name: java-17-amazon-corretto
+    state: present
+  become: yes
+
+- name: agregar repositorios de jenkins
+  get_url:
+    url:  https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo 
+    mode: "0644"
+  become: yes
+
+- name: Agregar jenkins llaves
+  rpm_key:
+    key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+    state: present
+  become: yes
+
+- name: Install jenkins server 
+  dnf:
+    name: jenkins
+    state: present
+  become: yes
+  notify: reload jenkins
+
+- name: Jenkins service
+  systemd:
+    name: jenkins
+    enabled: yes
+    state: started
+  become: yes

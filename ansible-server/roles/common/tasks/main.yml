@@ -1,0 +1,5 @@
+- name: Actualizar servidor
+  dnf: 
+    name: "*"
+    state: latest
+    

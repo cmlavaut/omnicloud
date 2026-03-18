@@ -1,0 +1,21 @@
+- name: Install 
+  dnf: 
+    name: nodejs 
+    state: present
+
+- name: Get npm version
+  command: npm --version
+  register: npm_version
+  changed_when: false
+  
+- name: Show npm version
+  debug:
+    msg: "npm version: {{ npm_version.stdout }}"
+
+- name: install pm2
+  npm:
+    name: pm2
+    global: yes
+    state: present
+  become: yes
+  

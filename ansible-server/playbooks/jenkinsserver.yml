@@ -1,0 +1,9 @@
+- name: Server Jenkins
+  hosts: localhost
+  become: yes
+  gather_facts: no
+  roles:
+     - common
+     - jenkins
+
+

@@ -1,0 +1,14 @@
+- name: Install Mysql client
+  dnf: 
+    name: mariadb105
+    state: present
+
+- name: Verificar mysql client
+  command: mysql --version
+  register: mysql_version
+  changed_when: false
+
+- name: Mostrar versión
+  debug:
+    var: mysql_version.stdout
+
