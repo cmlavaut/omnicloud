@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage ("Clone Repository") { 
             steps {
-                git branch: "master", url: "https://github.com/cmlavaut/omnicloud.git", credentialsId: "github-kmi"
+                git branch: "master", url: "https://github.com/cmlavaut/omnicloud.git", credentialsId: "github"
             }
         }
 
