@@ -6,3 +6,4 @@
      - common
      - nodejs
      - mysqlcx
+     - docker
