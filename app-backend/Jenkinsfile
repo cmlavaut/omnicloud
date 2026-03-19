@@ -24,6 +24,14 @@ pipeline {
             }
         }
 
+        stage ("Run Tests") {
+            steps {
+                dir ("app-backend") {
+                    sh 'npm test'
+                }
+            }
+        }
+
         stage ("Deploy to EC2") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
@@ -42,7 +50,6 @@ pipeline {
                           export DB_NAME=${DB_NAME}
                           npm install --production &&
                           pm2 delete app || true &&
-                          node seeds.js && 
                           pm2 start server.js --name app &&
                           pm2 save
                     '                 
@@ -50,7 +57,20 @@ pipeline {
                 }
             }
         }
+
+        stage ("Seed Database") {
+            steps {
+                sshagent (["ec2-ssh-pem"]) {
+                    sh """
+                    ssh ec2-user@${HOST} '
+                      cd /home/ec2-user/app-backend &&
+                      node seeds.js
+                    '
+                    """
+                }
+            }
+        }
     }
-}
+
 }
     
