@@ -18,7 +18,7 @@ pipeline {
 
         stage ("Install Dependencies") {
             steps {
-                dir ("omnicloud/app-backend") { 
+                dir ("app-backend") { 
                     sh 'npm install'
                 }
             }
@@ -33,7 +33,7 @@ pipeline {
                         passwordVariable: 'DB_PASS'
                     )]) {
                         sh """
-                        scp -o StrictHostKeyChecking=no -r omnicloud/app-backend ec2-user@${HOST}:/home/ec2-user/ 
+                        scp -o StrictHostKeyChecking=no -r app-backend ec2-user@${HOST}:/home/ec2-user/ 
                         ssh ec2-user@${HOST} '
                           cd /home/ec2-user/app-backend &&
                           export DB_HOST=${DB_HOST}
