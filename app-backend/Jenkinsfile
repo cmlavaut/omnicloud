@@ -7,6 +7,8 @@ pipeline {
         HOST = "10.10.1.21"
         DB_HOST = "appdb.c3i0oi8gkls4.us-east-1.rds.amazonaws.com"
         DB_NAME = "movie_db"
+        IMAGE_NAME = "kmilavaut/omnicloud-backend"
+        TAG = "latest"
     }
 
     stages {
@@ -32,7 +34,71 @@ pipeline {
             }
         }
 
-        stage ("Deploy to EC2") {
+        stage ("Build Docker Image") {
+            steps {
+                dir ("app-backend") {
+                    sh "docker build -t ${IMAGE_NAME}:${TAG} ."
+                }
+            }
+        }
+
+         stage ("Push to Docker Hub") {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh """
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push ${IMAGE_NAME}:${TAG}
+                    """
+                }
+            }
+        }
+
+         stage ("Deploy to EC2 (Docker)") {
+            steps {
+                sshagent (["ec2-ssh-pem"]) {
+                    sh """
+                    ssh ec2-user@${HOST} '
+                        docker pull ${IMAGE_NAME}:${TAG} &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        docker run -d -p 3000:3000 --name app \
+                          -e DB_HOST=${DB_HOST} \
+                          -e DB_USER=${DB_USER} \
+                          -e DB_PASS=${DB_PASS} \
+                          -e DB_NAME=${DB_NAME} \
+                          ${IMAGE_NAME}:${TAG}
+                    '
+                    """
+                }
+            }
+        }
+
+        stage ("Seed Database") {
+            steps {
+                sshagent (["ec2-ssh-pem"]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'rds-db-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASS'
+                    )]) {
+                        sh """
+                        ssh ec2-user@${HOST} '
+                            docker exec app node seeds.js
+                        '
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*         stage ("Deploy to EC2") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
                     withCredentials([usernamePassword(
@@ -83,4 +149,4 @@ pipeline {
         }
     }
 } 
-    
+     */
