@@ -62,10 +62,19 @@ pipeline {
         stage ("Seed Database") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
-                    sh """
-                    ssh ec2-user@${HOST} '
-                      cd /home/ec2-user/app-backend &&
-                      node seeds.js
+                    withCredentials([usernamePassword(
+                        credentialsId: 'rds-db-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASS'
+                    )]) {
+                        sh """
+                        ssh ec2-user@${HOST} '
+                        cd /home/ec2-user/app-backend &&
+                        export DB_HOST=${DB_HOST}
+                        export DB_USER=${DB_USER}
+                        export DB_PASS=${DB_PASS}
+                        export DB_NAME=${DB_NAME}
+                        node seeds.js
                     '
                     """
                 }
