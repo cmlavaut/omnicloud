@@ -1,36 +1,21 @@
-  - name: Instalar paquetes 
-    dnf:
-      name:
-       - yum-utils
-       - device-mapper-persistent-data
-       - lvm2
-      state: present
-      update_cache: yes
-      
-  - name: Add Docker repository
-    yum_repository:
-      name: docker-ce
-      description: Docker CE Stable - $basearch
-      baseurl: https://download.docker.com/linux/centos/docker-ce.repo
-      gpgcheck: no
-      enabled: yes
+- name: Install Docker (moby)
+  dnf:
+    name:
+      - docker
+    state: present
+    update_cache: yes
+
+- name: Start Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Add ec2-user to docker group
+  user:
+    name: ec2-user
+    groups: docker
+    append: yes 
  
-  - name: Install Docker
-    dnf:
-      name:
-        - docker-ce
-        - docker-ce-cli
-        - containerd.io
-      state: latest
+ 
 
-  - name: Start Docker service
-    systemd:
-       name: docker
-       state: started
-       enabled: yes
-
-  - name: Add ec2-user to docker group
-    user:
-      name: ec2-user
-      groups: docker
-      append: yes
