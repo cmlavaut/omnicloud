@@ -29,14 +29,14 @@ pipeline {
                 sshagent (["ec2-ssh-pem"]) {
                     sh """
                     scp -o StrictHostKeyChecking=no -r app-frontend ec2-user@${HOST1}:/home/ec2-user/
-                    ssh ec2-user@${HOST1} '
+                    ssh ec2-user@${HOST1} "
                         cd /home/ec2-user/app-frontend &&
-                        export BACKEND_URL=${BACKEND_URL}
+                        export BACKEND_URL=${BACKEND_URL} &&
                         npm install --production &&
                         pm2 delete app-frontend || true &&
                         pm2 start server.js --name app-frontend &&
                         pm2 save
-                    '                 
+                    "                 
                     """
                 }
             }
@@ -46,15 +46,15 @@ pipeline {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
                     sh """
-                    scp -o StrictHostKeyChecking=no -r omnicloud/app-frontend ec2-user@${HOST2}:/home/ec2-user/
-                    ssh ec2-user@${HOST2} '
+                    scp -o StrictHostKeyChecking=no -r app-frontend ec2-user@${HOST2}:/home/ec2-user/
+                    ssh ec2-user@${HOST2} "
                         cd /home/ec2-user/app-frontend &&
-                        export BACKEND_URL=${BACKEND_URL}
+                        export BACKEND_URL=${BACKEND_URL} &&
                         npm install --production &&
                         pm2 delete app-frontend || true &&
                         pm2 start server.js --name app-frontend &&
                         pm2 save
-                    '                 
+                    "                 
                     """
                 }
             }
