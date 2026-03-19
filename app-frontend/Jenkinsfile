@@ -7,6 +7,8 @@ pipeline {
         HOST1 = "10.10.200.78"
         HOST2 = "10.10.100.135"
         BACKEND_URL = "10.10.1.21:3000"
+        IMAGE_NAME = "kmilavaut/omnicloud-frontend"
+        TAG = "latest"
     }
 
     stages {
@@ -24,6 +26,88 @@ pipeline {
             }
         }
 
+        stage ("Build Docker Image") {
+            steps {
+                dir ("app-frontend") {
+                    sh "docker build -t ${IMAGE_NAME}:${TAG} ."
+                }
+            }
+        }
+
+        stage ("Push to Docker Hub") {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh """
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push ${IMAGE_NAME}:${TAG}
+                    """
+                }
+            }
+        }
+
+        stage ("Deploy to FRONTEND1-Docker") {
+            steps {
+                sshagent (["ec2-ssh-pem"]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'rds-db-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASS'
+                    )]){
+                        sh """
+                        ssh ec2-user@${HOST1} "
+                            docker pull ${IMAGE_NAME}:${TAG} &&
+                            docker stop app || true &&
+                            docker rm app || true &&
+                            pkill node || true &&
+                            pm2 delete all || true &&
+                            docker run -d -p 3000:3000 --name app \
+                              -e DB_HOST=${DB_HOST} \
+                              -e DB_USER=${DB_USER} \
+                              -e DB_PASS=${DB_PASS} \
+                              -e DB_NAME=${DB_NAME} \
+                              ${IMAGE_NAME}:${TAG}
+                        "
+                        """
+                    }
+                }
+            }
+        }
+
+        stage ("Deploy to FRONTEND2-Docker") {
+            steps {
+                sshagent (["ec2-ssh-pem"]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'rds-db-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASS'
+                    )]){
+                        sh """
+                        ssh ec2-user@${HOST2} "
+                            docker pull ${IMAGE_NAME}:${TAG} &&
+                            docker stop app || true &&
+                            docker rm app || true &&
+                            pkill node || true &&
+                            pm2 delete all || true &&
+                            docker run -d -p 3000:3000 --name app \
+                              -e DB_HOST=${DB_HOST} \
+                              -e DB_USER=${DB_USER} \
+                              -e DB_PASS=${DB_PASS} \
+                              -e DB_NAME=${DB_NAME} \
+                              ${IMAGE_NAME}:${TAG}
+                        "
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* 
         stage ("Deploy to FRONTEND1") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
@@ -64,3 +148,4 @@ pipeline {
     
 }
 
+ */
