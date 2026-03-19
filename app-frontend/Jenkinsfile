@@ -52,27 +52,18 @@ pipeline {
         stage ("Deploy to FRONTEND1-Docker") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'rds-db-credentials',
-                        usernameVariable: 'DB_USER',
-                        passwordVariable: 'DB_PASS'
-                    )]){
-                        sh """
-                        ssh ec2-user@${HOST1} "
-                            docker pull ${IMAGE_NAME}:${TAG} &&
-                            docker stop app || true &&
-                            docker rm app || true &&
-                            pkill node || true &&
-                            pm2 delete all || true &&
-                            docker run -d -p 3000:3000 --name app \
-                              -e DB_HOST=${DB_HOST} \
-                              -e DB_USER=${DB_USER} \
-                              -e DB_PASS=${DB_PASS} \
-                              -e DB_NAME=${DB_NAME} \
-                              ${IMAGE_NAME}:${TAG}
-                        "
-                        """
-                    }
+                    sh """
+                    ssh ec2-user@${HOST1} "
+                        docker pull ${IMAGE_NAME}:${TAG} &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        pkill node || true &&
+                        pm2 delete all || true &&
+                        docker run -d -p 3030:3030 --name app \
+                            -e BACKEND_URL=${BACKEND_URL} \
+                            ${IMAGE_NAME}:${TAG}
+                    "
+                    """
                 }
             }
         }
@@ -80,27 +71,18 @@ pipeline {
         stage ("Deploy to FRONTEND2-Docker") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'rds-db-credentials',
-                        usernameVariable: 'DB_USER',
-                        passwordVariable: 'DB_PASS'
-                    )]){
-                        sh """
-                        ssh ec2-user@${HOST2} "
-                            docker pull ${IMAGE_NAME}:${TAG} &&
-                            docker stop app || true &&
-                            docker rm app || true &&
-                            pkill node || true &&
-                            pm2 delete all || true &&
-                            docker run -d -p 3000:3000 --name app \
-                              -e DB_HOST=${DB_HOST} \
-                              -e DB_USER=${DB_USER} \
-                              -e DB_PASS=${DB_PASS} \
-                              -e DB_NAME=${DB_NAME} \
-                              ${IMAGE_NAME}:${TAG}
-                        "
-                        """
-                    }
+                    sh """
+                    ssh ec2-user@${HOST2} "
+                        docker pull ${IMAGE_NAME}:${TAG} &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        pkill node || true &&
+                        pm2 delete all || true &&
+                        docker run -d -p 3030:3030 --name app \
+                            -e BACKEND_URL=${BACKEND_URL} \
+                            ${IMAGE_NAME}:${TAG}
+                    "
+                    """
                 }
             }
         }
