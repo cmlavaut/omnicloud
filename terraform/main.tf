@@ -437,3 +437,51 @@ module "db" {
     Name = "appdb"
   }
 }
+
+#crear metricas con CloudWatch para monitoreo de frontend EC2
+resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  alarm_name          = "cpu-high-${local.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.cpu_threshold
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.frontend.name
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "memory_high" {
+  alarm_name          = "memory-high-${local.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "mem_used_percent"
+  namespace           = "CWAgent"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.memory_threshold
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.frontend.name
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "disk_high" {
+  alarm_name          = "disk-high-${local.env}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "disk_used_percent"
+  namespace           = "CWAgent"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.disk_threshold
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.frontend.name
+    path                 = "/"
+    fstype               = "xfs"
+  }
+}
