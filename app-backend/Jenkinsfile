@@ -4,7 +4,7 @@ pipeline {
         nodejs "nodejs"
     }
     environment {
-        HOST = "10.10.1.218"
+        HOST = "10.10.1.21"
         DB_HOST = "appdb.c3i0oi8gkls4.us-east-1.rds.amazonaws.com"
         DB_NAME = "movie_db"
     }
