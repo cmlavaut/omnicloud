@@ -42,7 +42,7 @@ pipeline {
                           export DB_NAME=${DB_NAME}
                           npm install --production &&
                           pm2 delete app || true &&
-                          node seed.js && 
+                          node seeds.js && 
                           pm2 start server.js --name app &&
                           pm2 save
                     '                 
