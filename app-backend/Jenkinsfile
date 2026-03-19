@@ -60,19 +60,25 @@ pipeline {
          stage ("Deploy to EC2 (Docker)") {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
-                    sh """
-                    ssh ec2-user@${HOST} "
-                        docker pull ${IMAGE_NAME}:${TAG} &&
-                        docker stop app || true &&
-                        docker rm app || true &&
-                        docker run -d -p 3000:3000 --name app \
-                          -e DB_HOST=${DB_HOST} \
-                          -e DB_USER=${DB_USER} \
-                          -e DB_PASS=${DB_PASS} \
-                          -e DB_NAME=${DB_NAME} \
-                          ${IMAGE_NAME}:${TAG}
-                    "
-                    """
+                    withCredentials([usernamePassword(
+                        credentialsId: 'rds-db-credentials',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASS'
+                    )]){
+                        sh """
+                        ssh ec2-user@${HOST} "
+                            docker pull ${IMAGE_NAME}:${TAG} &&
+                            docker stop app || true &&
+                            docker rm app || true &&
+                            docker run -d -p 3000:3000 --name app \
+                              -e DB_HOST=${DB_HOST} \
+                              -e DB_USER=${DB_USER} \
+                              -e DB_PASS=${DB_PASS} \
+                              -e DB_NAME=${DB_NAME} \
+                              ${IMAGE_NAME}:${TAG}
+                        "
+                        """
+                    }
                 }
             }
         }
