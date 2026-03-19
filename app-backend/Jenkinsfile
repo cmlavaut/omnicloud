@@ -70,6 +70,8 @@ pipeline {
                             docker pull ${IMAGE_NAME}:${TAG} &&
                             docker stop app || true &&
                             docker rm app || true &&
+                            pkill node || true &&
+                            pm2 delete all || true &&
                             docker run -d -p 3000:3000 --name app \
                               -e DB_HOST=${DB_HOST} \
                               -e DB_USER=${DB_USER} \
@@ -93,6 +95,7 @@ pipeline {
                     )]) {
                         sh """
                         ssh ec2-user@${HOST} "
+                            sleep 5 &&
                             docker exec app node seeds.js
                         "
                         """
