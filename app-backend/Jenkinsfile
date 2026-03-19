@@ -61,7 +61,7 @@ pipeline {
             steps {
                 sshagent (["ec2-ssh-pem"]) {
                     sh """
-                    ssh ec2-user@${HOST} '
+                    ssh ec2-user@${HOST} "
                         docker pull ${IMAGE_NAME}:${TAG} &&
                         docker stop app || true &&
                         docker rm app || true &&
@@ -71,7 +71,7 @@ pipeline {
                           -e DB_PASS=${DB_PASS} \
                           -e DB_NAME=${DB_NAME} \
                           ${IMAGE_NAME}:${TAG}
-                    '
+                    "
                     """
                 }
             }
@@ -86,9 +86,9 @@ pipeline {
                         passwordVariable: 'DB_PASS'
                     )]) {
                         sh """
-                        ssh ec2-user@${HOST} '
+                        ssh ec2-user@${HOST} "
                             docker exec app node seeds.js
-                        '
+                        "
                         """
                     }
                 }
