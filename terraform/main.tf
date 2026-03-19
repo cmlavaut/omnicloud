@@ -393,4 +393,47 @@ module "ec2_instance" {
   }
 }
 
+resource "aws_db_subnet_group" "appdb" {
+  name = "appdb-group"
+  subnet_ids = [
+    module.vpc.private_subnets[0],
+    module.vpc.private_subnets[1]
+  ]
 
+  tags = {
+    Name = "appdb-group"
+  }
+}
+
+#Creando la Database RDS
+module "db" {
+  source = "terraform-aws-modules/rds/aws"
+
+  identifier = "appdb"
+
+  engine            = "mysql"
+  engine_version    = "8.0"
+  instance_class    = var.rds_type
+  allocated_storage = var.storage
+
+  db_name  = var.dbname
+  username = var.dbusername
+  port     = "3306"
+
+  iam_database_authentication_enabled = true
+  family                              = "mysql8.0"
+  major_engine_version                = "8.0"
+  multi_az                            = true
+  db_subnet_group_name                = aws_db_subnet_group.appdb.name
+  vpc_security_group_ids              = [module.database_sg.security_group_id]
+  maintenance_window                  = "Mon:00:00-Mon:03:00"
+  backup_window                       = "03:00-06:00"
+  enabled_cloudwatch_logs_exports     = ["general"]
+  create_cloudwatch_log_group         = true
+  skip_final_snapshot                 = true
+  deletion_protection                 = false
+
+  tags = {
+    Name = "appdb"
+  }
+}

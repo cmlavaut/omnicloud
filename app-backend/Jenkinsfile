@@ -5,14 +5,14 @@ pipeline {
     }
     environment {
         HOST = "10.10.1.218"
-        DB_HOST = ""
+        DB_HOST = "appdb.c3i0oi8gkls4.us-east-1.rds.amazonaws.com"
         DB_NAME = "movie_db"
     }
 
     stages {
         stage ("Clone Repository") { 
             steps {
-                git branch: "master", url: "https://github.com/cmlavaut/omnicloud.git", credentialsId: "github-kmi"
+                git branch: "master", url: "https://github.com/cmlavaut/omnicloud.git", credentialsId: "github"
             }
         }
 

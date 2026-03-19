@@ -4,8 +4,8 @@ pipeline {
         nodejs "nodejs"
     }
     environment {
-        HOST = "10.10.10.83"
-        BACKEND_URL = ""
+        HOST = "10.10.200.78"
+        BACKEND_URL = "10.10.1.21:3000"
     }
 
     stages {

@@ -11,3 +11,5 @@
 *.tfvars
 *.tfvars.json
 
+#notas del proyecto
+terraform/notes.txt
